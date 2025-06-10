@@ -1,5 +1,6 @@
-import os
 import ast
+import os
+
 
 def create_structure(directory_path):
     """Create the structure of the repository directory by parsing Python files.
@@ -31,6 +32,7 @@ def create_structure(directory_path):
                 curr_struct[file_name] = {}
 
     return structure
+
 
 def parse_python_file(file_path, file_content=None):
     """Parse a Python file to extract class and function definitions with their line numbers.
