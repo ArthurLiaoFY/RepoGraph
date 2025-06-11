@@ -172,7 +172,7 @@ def extract_ast_from_filepath(
 
     for dirpath, dirnames, filenames in os.walk(aim_filepath):
         for file in filenames:
-            if file.endswith(".c"):
+            if file.endswith((".c", "h")):
                 full_path = os.path.join(dirpath, file)
                 print("Preprocessing ", full_path)
 
