@@ -1,15 +1,16 @@
+# %%
 import json
 import re
 import sys
+from pprint import pprint
 from typing import List
 
 from pycparser import c_ast, c_generator, parse_file
+from pycparser.plyparser import Coord
 
 # This is not required if you've installed pycparser into
 # your site-packages/ with setup.py
-sys.path.extend([".", ".."])
 
-from pycparser.plyparser import Coord
 
 RE_CHILD_ARRAY = re.compile(r"(.*)\[(.*)\]")
 RE_INTERNAL_ATTR = re.compile("__.*__")
@@ -163,44 +164,35 @@ def generate_c_code(my_ast):
     return generator.visit(my_ast)
 
 
+# %%
 # ------------------------------------------------------------------------------
 if __name__ == "__main__":
-    import json
+    import os
 
-    if len(sys.argv) > 1:
-        filename = sys.argv[1]
-    else:
-        filename = "examples/c_files/year.c"
-    ast = parse_file(
-        filename,
-        use_cpp=True,
-        cpp_path="gcc",
-        cpp_args=["-E", r"-Iutils/fake_libc_include"],
-    )
-    ast_dict = to_dict(ast)
+    result = {}
 
-    with open(filename, encoding="utf-8") as f:
-        lines = f.readlines()
+    for dirpath, dirnames, filenames in os.walk("examples/c_files"):
+        for file in filenames:
+            if file.endswith(".c"):
+                full_path = os.path.join(dirpath, file)
+                print(full_path)
 
-    for func in ast.ext:
-        print(func)
-        print(generate_c_code(func))
-        print("*" * 50)
+                ast = parse_file(
+                    full_path,
+                    use_cpp=True,
+                    cpp_path="gcc",
+                    cpp_args=["-E", r"-Iutils/fake_libc_include"],
+                )
+                result[full_path] = to_dict(ast)
+
+    # with open(filename, encoding="utf-8") as f:
+    #     lines = f.readlines()
+
+    # for func in ast.ext:
+    #     print(func)
+    #     print(generate_c_code(func))
+    #     print("*" * 50)
 
     with open("data.json", "w") as f:
-        json.dump(ast_dict, f, sort_keys=True, indent=4)
-# %%
-
-import json
-
-with open("data.json", "r") as file:
-    data = json.load(file)
-# %%
-a = []
-a2 = []
-for element in data["ext"]:
-    a.append(element["_nodetype"])
-    # a2.append()
-# %%
-set(a)
+        json.dump(result, f, sort_keys=True, indent=4)
 # %%
