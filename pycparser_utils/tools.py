@@ -1,9 +1,9 @@
 # %%
+import copy
 import json
+import os
 import re
-import sys
-from pprint import pprint
-from typing import List
+from collections import defaultdict
 
 from pycparser import c_ast, c_generator, parse_file
 from pycparser.plyparser import Coord
@@ -136,14 +136,15 @@ def _convert_to_obj(value):
 
 def from_dict(node_dict):
     """Recursively build an ast from dict representation"""
-    class_name = node_dict.pop("_nodetype")
+    copy_node_dict = copy.deepcopy(node_dict)
+    class_name = copy_node_dict.pop("_nodetype")
 
     klass = getattr(c_ast, class_name)
 
     # Create a new dict containing the key-value pairs which we can pass
     # to node constructors.
     objs = {}
-    for key, value in node_dict.items():
+    for key, value in copy_node_dict.items():
         if key == "coord":
             objs[key] = _parse_coord(value)
         else:
@@ -162,3 +163,25 @@ def from_json(ast_json):
 def generate_c_code(my_ast):
     generator = c_generator.CGenerator()
     return generator.visit(my_ast)
+
+
+def extract_ast_from_filepath(
+    aim_filepath: str, fake_libc_include_path: str
+) -> dict[list]:
+    result = defaultdict(list)
+
+    for dirpath, dirnames, filenames in os.walk(aim_filepath):
+        for file in filenames:
+            if file.endswith(".c"):
+                full_path = os.path.join(dirpath, file)
+                print("Preprocessing ", full_path)
+
+                ast = parse_file(
+                    full_path,
+                    use_cpp=True,
+                    cpp_path="gcc",
+                    cpp_args=["-E", fake_libc_include_path],
+                )
+                for func in ast.ext:
+                    result[full_path].append(to_dict(func))
+    return result
