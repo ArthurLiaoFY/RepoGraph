@@ -21,7 +21,7 @@ class Node(BaseModel):
     name: Union[str, None] = None
     # ---------------------------
     code: str
-    ast: Dict
+    ast: str
     # ---------------------------
     line: int
     # ---------------------------
@@ -75,7 +75,7 @@ for filepath, file_content in repo_ast.items():
             name=find_func_name(block),
             fname=block["coord"].split(":")[0].split("/")[-1],
             code=generate_c_code(from_dict(block)),
-            ast=block,
+            ast=json.dumps(block),
             line=block["coord"].split(":")[1],
             method=block["_nodetype"],
         )
@@ -87,4 +87,4 @@ set([v.method for v in graph_nodes.values()])
 
 
 for v in graph_nodes.values():
-    search_node(node=v.ast, node_type="Typedef")
+    search_node(node=json.loads(v.ast), node_type="Typedef")
