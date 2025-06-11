@@ -23,8 +23,6 @@ class Node(BaseModel):
     code: str
     ast: str
     # ---------------------------
-    line: int
-    # ---------------------------
 
 
 def search_node(node: Dict[str, Union[str, List, Dict]], node_type: str):
@@ -63,28 +61,46 @@ repo_ast = extract_ast_from_filepath(
     fake_libc_include_path=r"-Iutils/fake_libc_include",
 )
 
-graph_nodes = {}
+file_nodes = {}
+block_nodes = {}
 for filepath, file_content in repo_ast.items():
     print(filepath)
     print("len of ", len(file_content))
     for block in file_content:
         id = uuid.uuid4()
-        graph_nodes[str(id)] = Node(
+        block_nodes[str(id)] = Node(
             uuid=id,
-            rel_path=block["coord"].split(":")[0],
+            rel_path=filepath,
             name=find_func_name(block),
-            fname=block["coord"].split(":")[0].split("/")[-1],
+            fname=filepath.split("/")[-1],
             code=generate_c_code(from_dict(block)),
             ast=json.dumps(block),
-            line=block["coord"].split(":")[1],
             method=block["_nodetype"],
         )
+        ###
 
-graph_nodes[list(graph_nodes.keys())[0]]
+        start_line = block["coord"].split(":")[1]
+        end_line = block["coord"].split(":")[1] + len(
+            block_nodes[str(id)].code.splitlines()
+        )
+        'insert edge serve(start_year,end_year) values "player113"->"team204":(2016, 2019);'
 
+        break
+        # start_line=block["coord"].split(":")[1],
+        # end_line=block["coord"].split(":")[1],
 
-set([v.method for v in graph_nodes.values()])
+# %%
+block_nodes[list(block_nodes.keys())[0]]
+# %%
 
+set([v.method for v in block_nodes.values()])
+# %%
 
-for v in graph_nodes.values():
+for v in block_nodes.values():
     search_node(node=json.loads(v.ast), node_type="Typedef")
+
+# %%
+block_nodes
+# %%
+repo_ast.keys()
+# %%
