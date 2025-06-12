@@ -1,5 +1,6 @@
 # %%
 import json
+import os
 import uuid
 from collections import defaultdict
 from pprint import pprint
@@ -56,9 +57,28 @@ def find_func_name(node: Dict[str, Union[str, List, Dict]]) -> Union[str, None]:
 
 
 # %%
+
+
+def get_all_include_dirs(base_dir):
+    include_dirs = []
+    for root, dirs, files in os.walk(base_dir):
+        if any([".h" in fname for fname in files]):
+            include_dirs.append(f"-I{root}")
+    return include_dirs
+
+
+get_all_include_dirs("target")
+# %%
 repo_ast = extract_ast_from_filepath(
-    aim_filepath=r"examples/c_files",
-    fake_libc_include_path=r"-Iutils/fake_libc_include",
+    aim_filepath=r"target",
+    args=[
+        "-E",
+        "-D__dsPIC33FJ64GS606__",  # 你用的是哪一顆 MCU
+        "-DDPS2000AB8A",  # 定義機種，fireware setting 24
+        *get_all_include_dirs("target"),
+        r"-Iutils/fake_libc_include",
+        r"-Iutils/fake_mcu_include",
+    ],
 )
 
 file_nodes = {}
@@ -79,13 +99,12 @@ for filepath, file_content in repo_ast.items():
         )
         ###
 
-        start_line = block["coord"].split(":")[1]
-        end_line = block["coord"].split(":")[1] + len(
-            block_nodes[str(id)].code.splitlines()
-        )
-        'insert edge serve(start_year,end_year) values "player113"->"team204":(2016, 2019);'
+        # start_line = block["coord"].split(":")[1]
+        # end_line = block["coord"].split(":")[1] + len(
+        #     block_nodes[str(id)].code.splitlines()
+        # )
+        # 'insert edge serve(start_year,end_year) values "player113"->"team204":(2016, 2019);'
 
-        break
         # start_line=block["coord"].split(":")[1],
         # end_line=block["coord"].split(":")[1],
 
